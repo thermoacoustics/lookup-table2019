@@ -2,7 +2,7 @@ def table_read(ta,tc,th):
     import pandas as pd
     import numpy as np
     from scipy.interpolate import RegularGridInterpolator
-
+    
     file = r'data short.xlsx'
     lt = pd.read_excel(file)
     
@@ -17,8 +17,14 @@ def table_read(ta,tc,th):
     # AHX
     ahx_list     = lt['AHX'] # locate the AHX range and values
     ahx_list     = ahx_list.drop_duplicates(keep='first')
-    ahx_interest = ahx_list.iloc[(ahx_list-ta).abs().argsort()[:2]].sort_index().values.tolist() # find the two closest AHX values  
-    rows         = lt[lt['AHX'].isin(ahx_interest)]
+    ahx_interest = ahx_list.iloc[(ahx_list-ta).abs().argsort()[:2]].sort_index().values.tolist() # find the two closest AHX values
+    if ta > max(ahx_interest):
+        return print('AHX too hot')
+    elif ta < min(ahx_interest):
+        return print('AHX not onset')
+    else:
+        rows = lt[lt['AHX'].isin(ahx_interest)]
+        
     
     # CHX
     chx_list     = lt['CHX'] # locate the AHX range and values
