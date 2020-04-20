@@ -6,20 +6,15 @@ def table_read(ta,tc,th):
     file = r'data short.xlsx'
     lt = pd.read_excel(file)
     
-    # ta = 293.
-    # tc = 290.
-    # th = 400.
+    c_to_k = 273.15
+    
+    ta +=c_to_k
+    tc +=c_to_k
+    th +=c_to_k
     
     ahx_interest = []
     chx_interest = []
     hhx_interest = []
-    
-    # table boundary flags
-    # fl_ahx_outrange = False
-    # fl_chx_lo       = False
-    # fl_chx_hi       = False
-    # fl_hhx_lo       = False
-    # fl_hhx_hi       = False
     
     # AHX
     ahx_list     = lt['AHX'] # locate the AHX range and values
