@@ -8,9 +8,9 @@ def table_read(ta,tc,th):
     
     c_to_k = 273.15
     
-    ta +=c_to_k
-    tc +=c_to_k
-    th +=c_to_k
+    # ta +=c_to_k
+    # tc +=c_to_k
+    # th +=c_to_k
     
     ahx_interest = []
     chx_interest = []
@@ -28,7 +28,7 @@ def table_read(ta,tc,th):
     chx_list     = rows['CHX'] # locate the AHX range and values
     chx_list     = chx_list.drop_duplicates(keep='first')
     chx_interest = chx_list.iloc[(chx_list-tc).abs().argsort()[:2]].sort_index().values.tolist()
-    fl_chx_hi    = (tc > max(chx_interest))
+    fl_chx_hi    = (tc > ta)
     fl_chx_lo    = (tc < min(chx_interest))   
     rows         = rows[rows['CHX'].isin(chx_interest)]
     
@@ -44,9 +44,9 @@ def table_read(ta,tc,th):
     # when not onset
     if fl_hhx_lo or fl_chx_hi:
         if fl_hhx_lo:
-            print('HHX =', th, 'too low, minimum onset', min(hhx_interest))
+            print('HHX =', th, 'too low, minimum available', min(hhx_interest)) # when HHX outrange the table availability i.e.300K
         elif fl_chx_hi:
-            print('CHX =', th, 'too high, maximum onset', max(chx_interest))
+            print('CHX =', th, 'larger than ambient,', ta, 'open window instead') # when CHX is higher than ambient
         return [0.,0.]
     elif fl_chx_lo or fl_hhx_hi or fl_ahx_outrange:
         print('Undefined temperature range')
@@ -65,8 +65,12 @@ def table_read(ta,tc,th):
             
             qh = RegularGridInterpolator((ahx_interest,chx_interest,hhx_interest), qh_mat)(np.array([ta,tc,th]))[0]
             qc = RegularGridInterpolator((ahx_interest,chx_interest,hhx_interest), qc_mat)(np.array([ta,tc,th]))[0]
-        
-            return [qc,qh]
+            if qh>=0 and qc>=0:
+                return [qc,qh]
+            else:
+                print ('Not onset 1')
+                return [0.,0.]
+    
         except ValueError:
             print ('Not onset')
             return [0.,0.]
