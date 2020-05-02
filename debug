@@ -16,6 +16,8 @@ chx_interest = []
 hhx_interest = []
 
 def HX_lister (whichHX,inputlist,Temp):
+    hx_interest = []
+    # 
     hx_list     = inputlist[whichHX] # locate the AHX range and values
     hx_list     = hx_list.drop_duplicates(keep='first')
     hx_interest = hx_list.iloc[(hx_list-Temp).abs().argsort()[:2]].sort_index().values.tolist() # find the two closest AHX values
@@ -27,15 +29,20 @@ def HX_lister (whichHX,inputlist,Temp):
 
 
 # AHX
-rows_al, rows_ah, fl_a_lo, fl_a_hi = HX_lister ('AHX',lt,ta)
+rows_al, rows_ah, fl_a_lo, fl_a_hi = HX_lister ('AHX',lt,ta) # returns AHX low and AHX hi boundaries
     
 
 # CHX
-rows_alcl, rows_alch, fl_alc_lo, fl_alc_hi = HX_lister ('CHX',rows_al,tc)
-rows_ahcl, rows_ahch, fl_ahc_lo, fl_ahc_hi = HX_lister ('CHX',rows_ah,tc)
+rows_alcl, rows_alch, fl_alc_lo, fl_alc_hi = HX_lister ('CHX',rows_al,tc) # AHX at lo boundary
+rows_ahcl, rows_ahch, fl_ahc_lo, fl_ahc_hi = HX_lister ('CHX',rows_ah,tc) 
 
 
 # HHX
+row_alclhl, row_alclhh, fl_alclh_lo, fl_alclh_hi = HX_lister ('HHX',rows_alcl,th)
+row_alchhl, row_alchhh, fl_alchh_lo, fl_alchh_hi = HX_lister ('HHX',rows_alch,th)
+row_ahclhl, row_ahclhh, fl_ahclh_lo, fl_ahclh_hi = HX_lister ('HHX',rows_ahcl,th)
+row_ahchhl, row_ahchhh, fl_ahchh_lo, fl_ahchh_hi = HX_lister ('HHX',rows_ahch,th)
+
 hhx_list     = rows['HHX'] # locate the AHX range and values
 hhx_list     = hhx_list.drop_duplicates(keep='first')
 hhx_interest = hhx_list.iloc[(hhx_list-th).abs().argsort()[:2]].sort_index().values.tolist()
