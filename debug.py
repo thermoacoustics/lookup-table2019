@@ -4,7 +4,7 @@
 
 import pandas as pd
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator, griddata
+from scipy.interpolate import interp1d, griddata
 
 file = r'data short.xlsx'
 lt = pd.read_excel(file)
@@ -13,26 +13,65 @@ c_to_k = 273.15
 
 ta = 300
 tc = 292
-th = 320
+th = 700
 
-def array_generator (Tamb,Tcool,Thot):
-    def HX_lister (whichHX,inputlist,Temp):
-        hx_interest = []
-        # 
-        hx_list     = inputlist[whichHX] # locate the AHX range and values
-        hx_list     = hx_list.drop_duplicates(keep='first')
-        hx_interest = hx_list.iloc[(hx_list-Temp).abs().argsort()[:2]].sort_index().values.tolist() # find the two closest AHX values
-        fl_lo = Temp < min(hx_interest)
-        fl_hi = Temp > max(hx_interest)
-        rows_l = inputlist[inputlist[whichHX]==(hx_interest[0])]
-        rows_h = inputlist[inputlist[whichHX]==(hx_interest[1])]
-        return rows_l, rows_h, fl_lo, fl_hi
+def amb_interpolator(temps,q_l,q_s,Tamb):
+    qs = np.array([q_l,q_s])
+    qf = interp1d(temps,qs)
+    q = qf(Tamb)
+    return q
+
+def second_interpolator(whichrows,Tcold,Thot):
+    points = whichrows[['CHX','HHX']].to_numpy()
+    qhs = whichrows['Q_HHX'].to_numpy()
+    qcs = whichrows['Q_CHX'].to_numpy()
+    qh = griddata(points,qhs,(Tcold,Thot),method='linear')
+    qc = griddata(points,qcs,(Tcold,Thot),method='linear')
+    return qh, qc
+
+def HX_lister (whichHX,inputlist,Temp):
+    hx_interest = []
+    # 
+    hx_list     = inputlist[whichHX] # locate the AHX range and values
+    hx_list     = hx_list.drop_duplicates(keep='first')
+    hx_interest = hx_list.iloc[(hx_list-Temp).abs().argsort()[:2]].sort_index().values.tolist() # find the two closest AHX values
+    fl_lo = Temp < min(hx_interest)
+    fl_hi = Temp > max(hx_interest)
+    rows_l = inputlist[inputlist[whichHX]==(hx_interest[0])]
+    rows_h = inputlist[inputlist[whichHX]==(hx_interest[1])]
+    return rows_l, rows_h, fl_lo, fl_hi, np.array(hx_interest)
+
+# all error flags
+fl_amb_outrange = (ta > max(lt['AHX'].to_numpy()) or ta < min(lt['AHX'].to_numpy()))
+fl_chx_lo = tc < min(lt['CHX'].to_numpy())
+fl_chx_hi = (ta-3 < tc)
+fl_hhx_lo = th < min(lt['HHX'].to_numpy())
+fl_hhx_hi = th > max(lt['HHX'].to_numpy())
+
+if fl_amb_outrange or fl_chx_lo or fl_chx_hi or fl_hhx_lo or fl_hhx_hi:
+    if fl_amb_outrange or fl_chx_lo or fl_hhx_hi:
+        print('Input data outside available range, run DeltaEC!')
+        return [1e16,1e16]
+    if fl_chx_hi:
+        print('CHX near as ambient, open window idiot!')
+        return [-1,-1]
+    else:
+        print('Cannot onset')
+        return [0.,0.]
     
-    
+else:
     # AHX
-    rows_al, rows_ah, fl_a_lo, fl_a_hi = HX_lister ('AHX',lt,ta) # returns AHX low and AHX hi boundaries
+    rows_al, rows_ah, fl_a_lo, fl_a_hi, Ts_a = HX_lister ('AHX',lt,ta) # returns AHX low and AHX hi boundaries
+    qh_al, qc_al = second_interpolator(rows_al,tc,th)
+    qh_ah, qc_ah = second_interpolator(rows_ah,tc,th)
+    qh = amb_interpolator(Ts_a,qh_al,qh_ah,ta)
+    qc = amb_interpolator(Ts_a,qc_al,qc_ah,ta)
     
-    
+    if qc<=0 or qh<=0:
+        print('Cannot onset')
+        return [0.,0.]
+    else:
+        return [qc,qh]
         
     
     # CHX
@@ -54,48 +93,7 @@ def array_generator (Tamb,Tcool,Thot):
     
     rows = pd.concat([row_alclhl, row_alclhh, row_alchhl, row_alchhh, row_ahclhl, row_ahclhh, row_ahchhl, row_ahchhh])
     
-    return row_alclhl, row_alclhh, row_alchhl, row_alchhh, row_ahclhl, row_ahclhh, row_ahchhl, row_ahchhh, fl_amb_outrange, fl_chx_lo, fl_chx_hi, fl_hhx_lo, fl_hhx_hi
+    row_alclhl, row_alclhh, row_alchhl, row_alchhh, row_ahclhl, row_ahclhh, row_ahchhl, row_ahchhh, fl_amb_outrange, fl_chx_lo, fl_chx_hi, fl_hhx_lo, fl_hhx_hi = array_generator (ta,tc,th)
+    
+    
 
-row_alclhl, row_alclhh, row_alchhl, row_alchhh, row_ahclhl, row_ahclhh, row_ahchhl, row_ahchhh, fl_amb_outrange, fl_chx_lo, fl_chx_hi, fl_hhx_lo, fl_hhx_hi = array_generator (ta,tc,th)
-
-hhx_list     = rows['HHX'] # locate the AHX range and values
-hhx_list     = hhx_list.drop_duplicates(keep='first')
-hhx_interest = hhx_list.iloc[(hhx_list-th).abs().argsort()[:2]].sort_index().values.tolist()
-fl_hhx_hi    = (th > max(hhx_interest))
-fl_hhx_lo    = (th < min(hhx_interest))
-rows         = rows[rows['HHX'].isin(hhx_interest)]
-
-# use the return flags for output
-# when not onset
-# if fl_hhx_lo or fl_chx_hi:
-#     if fl_hhx_lo:
-#         print('HHX =', th, 'too low, minimum available', min(hhx_interest)) # when HHX outrange the table availability i.e.300K
-#     elif fl_chx_hi:
-#         print('CHX =', th, 'larger than ambient,', ta, 'open window instead') # when CHX is higher than ambient
-#     return [0.,0.]
-# elif fl_chx_lo or fl_hhx_hi or fl_ahx_outrange:
-#     print('Undefined temperature range')
-#     return [0.,0.]
-# else:  
-#     try:
-#         # transform the 2x2x2 matrix to a interpolatble format qh_mat(ta,tc,th)
-#         qh_mat = np.zeros((len(ahx_interest),len(chx_interest),len(hhx_interest)))
-#         qc_mat = np.zeros((len(ahx_interest),len(chx_interest),len(hhx_interest)))
-        
-#         for i in range(len(ahx_interest)):
-#             for j in range(len(chx_interest)):
-#                 for k in range(len(hhx_interest)):
-#                     qh_mat[i,j,k] = rows[(rows['AHX']==ahx_interest[i]) & (rows['CHX']==chx_interest[j]) & (rows['HHX']==hhx_interest[k])]['Q_HHX'].to_numpy()
-#                     qc_mat[i,j,k] = rows[(rows['AHX']==ahx_interest[i]) & (rows['CHX']==chx_interest[j]) & (rows['HHX']==hhx_interest[k])]['Q_CHX'].to_numpy()
-        
-#         qh = RegularGridInterpolator((ahx_interest,chx_interest,hhx_interest), qh_mat)(np.array([ta,tc,th]))[0]
-#         qc = RegularGridInterpolator((ahx_interest,chx_interest,hhx_interest), qc_mat)(np.array([ta,tc,th]))[0]
-#         if qh>=0 and qc>=0:
-#             return [qc,qh]
-#         else:
-#             print ('Not onset 1')
-#             return [0.,0.]
-
-#     except ValueError:
-#         print ('Not onset')
-#         return [0.,0.]
