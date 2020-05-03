@@ -1,3 +1,6 @@
+# this tabl generates the Q for ONE UNIT
+# it returns qc, qh as two separate values
+
 def table_read(ta,tc,th):
     import pandas as pd
     import numpy as np
@@ -16,15 +19,15 @@ def table_read(ta,tc,th):
         qs = np.array([q_l,q_s])
         qf = interp1d(temps,qs)
         q = qf(Tamb)
-        return q
+        return float(q)
     
     def second_interpolator(whichrows,Tcold,Thot):
         points = whichrows[['CHX','HHX']].to_numpy()
         qhs = whichrows['Q_HHX'].to_numpy()
         qcs = whichrows['Q_CHX'].to_numpy()
-        qh = griddata(points,qhs,(Tcold,Thot),method='linear')
-        qc = griddata(points,qcs,(Tcold,Thot),method='linear')
-        return qh, qc
+        qh = griddata(points,qhs,(Tcold,Thot),method='cubic')
+        qc = griddata(points,qcs,(Tcold,Thot),method='cubic')
+        return float(qh), float(qc)
     
     def HX_lister (whichHX,inputlist,Temp):
         hx_interest = []
@@ -48,13 +51,13 @@ def table_read(ta,tc,th):
     if fl_amb_outrange or fl_chx_lo or fl_chx_hi or fl_hhx_lo or fl_hhx_hi:
         if fl_amb_outrange or fl_chx_lo or fl_hhx_hi:
             print('Input data outside available range, run DeltaEC!')
-            return [1e16,1e16]
+            return 1e16,1e16
         if fl_chx_hi:
             print('CHX near as ambient, open window idiot!')
-            return [-1,-1]
+            return -1,-1
         else:
             print('Cannot onset')
-            return [0.,0.]
+            return 0.,0.
         
     else:
         # AHX
@@ -64,8 +67,8 @@ def table_read(ta,tc,th):
         qh = amb_interpolator(Ts_a,qh_al,qh_ah,ta)
         qc = amb_interpolator(Ts_a,qc_al,qc_ah,ta)
         
-        if qc<=0 or qh<=0:
+        if qc<=10 or qh<=10: # threshold 10W for values to return
             print('Cannot onset')
-            return [0.,0.]
+            return 0.,0.
         else:
-            return [qc,qh]
+            return qc,qh

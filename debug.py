@@ -13,7 +13,7 @@ c_to_k = 273.15
 
 ta = 300
 tc = 292
-th = 700
+th = 500
 
 def amb_interpolator(temps,q_l,q_s,Tamb):
     qs = np.array([q_l,q_s])
@@ -51,13 +51,13 @@ fl_hhx_hi = th > max(lt['HHX'].to_numpy())
 if fl_amb_outrange or fl_chx_lo or fl_chx_hi or fl_hhx_lo or fl_hhx_hi:
     if fl_amb_outrange or fl_chx_lo or fl_hhx_hi:
         print('Input data outside available range, run DeltaEC!')
-        return [1e16,1e16]
+        # return [1e16,1e16]
     if fl_chx_hi:
         print('CHX near as ambient, open window idiot!')
-        return [-1,-1]
+        # return [-1,-1]
     else:
         print('Cannot onset')
-        return [0.,0.]
+        # return [0.,0.]
     
 else:
     # AHX

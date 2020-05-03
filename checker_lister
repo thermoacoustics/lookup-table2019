@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sun May  3 15:06:51 2020
+
+@author: Fourthbus
+"""
+
+# This table is used for generating analysis data to be documented into Excel and save effort
+
+from table import table_read as tr
+
+Tlist = [[25,15,80],
+[25,15,100],
+[25,19,80],
+[25,19,100],
+[25,21,80],
+[25,21,100],
+[27,15,80],
+[27,15,100],
+[27,19,80],
+[27,19,100],
+[27,21,80],
+[27,21,100],
+[29,15,80],
+[29,15,100],
+[29,19,80],
+[29,19,100],
+[29,21,80],
+[29,21,100]]
+
+qcs = list()
+qhs = list()
+
+for i in range(len(Tlist)):
+    tlist = Tlist[i]
+    qc,qh = tr(tlist[0],tlist[1],tlist[2])
+    qcs.append(qc)
+    qhs.append(qh)
