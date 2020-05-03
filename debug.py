@@ -4,7 +4,7 @@
 
 import pandas as pd
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import RegularGridInterpolator, griddata
 
 file = r'data short.xlsx'
 lt = pd.read_excel(file)
@@ -31,6 +31,8 @@ def array_generator (Tamb,Tcool,Thot):
     
     # AHX
     rows_al, rows_ah, fl_a_lo, fl_a_hi = HX_lister ('AHX',lt,ta) # returns AHX low and AHX hi boundaries
+    
+    
         
     
     # CHX
@@ -52,9 +54,9 @@ def array_generator (Tamb,Tcool,Thot):
     
     rows = pd.concat([row_alclhl, row_alclhh, row_alchhl, row_alchhh, row_ahclhl, row_ahclhh, row_ahchhl, row_ahchhh])
     
-    return rows, fl_amb_outrange, fl_chx_lo, fl_chx_hi, fl_hhx_lo, fl_hhx_hi
+    return row_alclhl, row_alclhh, row_alchhl, row_alchhh, row_ahclhl, row_ahclhh, row_ahchhl, row_ahchhh, fl_amb_outrange, fl_chx_lo, fl_chx_hi, fl_hhx_lo, fl_hhx_hi
 
-rows, fl_amb_outrange, fl_chx_lo, fl_chx_hi, fl_hhx_lo, fl_hhx_hi = array_generator (ta,tc,th)
+row_alclhl, row_alclhh, row_alchhl, row_alchhh, row_ahclhl, row_ahclhh, row_ahchhl, row_ahchhh, fl_amb_outrange, fl_chx_lo, fl_chx_hi, fl_hhx_lo, fl_hhx_hi = array_generator (ta,tc,th)
 
 hhx_list     = rows['HHX'] # locate the AHX range and values
 hhx_list     = hhx_list.drop_duplicates(keep='first')
