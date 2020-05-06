@@ -1,5 +1,11 @@
 # this tabl generates the Q for ONE UNIT
 # it returns qc, qh as two separate values
+# # # # # # #
+# error codes:
+# 1 - input data outside available range
+# 2 - CHX is close to ambient, hence no cooling demand
+# 3 - won't onset
+# 0 - it works
 
 def table_read(ta,tc,th):
     import pandas as pd
@@ -51,13 +57,13 @@ def table_read(ta,tc,th):
     if fl_amb_outrange or fl_chx_lo or fl_chx_hi or fl_hhx_lo or fl_hhx_hi:
         if fl_amb_outrange or fl_chx_lo or fl_hhx_hi:
             print('Input data outside available range, run DeltaEC!')
-            return 1e16,1e16
+            return 0.,0.,1
         if fl_chx_hi:
             print('CHX near as ambient, open window idiot!')
-            return -1,-1
+            return 0.,0.,2
         else:
             print('Cannot onset')
-            return 0.,0.
+            return 0.,0.,3
         
     else:
         # AHX
@@ -69,6 +75,6 @@ def table_read(ta,tc,th):
         
         if qc<=10 or qh<=10: # threshold 10W for values to return
             print('Cannot onset')
-            return 0.,0.
+            return 0.,0.,3
         else:
-            return qc,qh
+            return qc,qh,0
