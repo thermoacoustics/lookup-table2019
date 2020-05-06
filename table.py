@@ -50,7 +50,7 @@ def table_read(ta,tc,th):
     # all error flags
     fl_amb_outrange = (ta > max(lt['AHX'].to_numpy()) or ta < min(lt['AHX'].to_numpy()))
     fl_chx_lo = tc < min(lt['CHX'].to_numpy())
-    fl_chx_hi = (ta-3 < tc)
+    fl_chx_hi = (ta < tc)
     fl_hhx_lo = th < min(lt['HHX'].to_numpy())
     fl_hhx_hi = th > max(lt['HHX'].to_numpy())
     
