@@ -14,14 +14,14 @@ def Th_lookup(ta,tc,qc):
     import multiprocessing
     # use parallel computing to reduce time
     
-    ta = 40
-    tc = 24
+    # ta = 32
+    # tc = 22
     
     CtoK = 273.15
     
     qdata = pd.DataFrame(data=None, index=None, columns=None, dtype=None, copy=False)
     
-    th_list = np.arange(round(300-CtoK,3),round(601-CtoK,3),100)
+    th_list = np.arange(round(300-CtoK,3),round(601-CtoK,3),1)
     
     # for j in range(0,length(th_list)):
         
