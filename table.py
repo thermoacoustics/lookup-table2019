@@ -1,11 +1,13 @@
-# this tabl generates the Q for ONE UNIT
-# it returns qc, qh as two separate values
-# # # # # # #
-# error codes:
-# 1 - input data outside available range
-# 2 - CHX is close to ambient, hence no cooling demand
-# 3 - won't onset
-# 0 - it works
+# =============================================================================
+# # this tabl generates the Q for ONE UNIT
+# # it returns qc, qh as two separate values
+# # # # # # # #
+# # error codes:
+# # 1 - input data outside available range
+# # 2 - CHX is close to ambient, hence no cooling demand
+# # 3 - won't onset
+# # 0 - it works
+# =============================================================================
 
 def table_read(ta,tc,th,printmsg = True):
     import pandas as pd
@@ -31,8 +33,8 @@ def table_read(ta,tc,th,printmsg = True):
         points = whichrows[['CHX','HHX']].to_numpy()
         qhs = whichrows['Q_HHX'].to_numpy()
         qcs = whichrows['Q_CHX'].to_numpy()
-        qh = griddata(points,qhs,(Tcold,Thot),method='cubic')
-        qc = griddata(points,qcs,(Tcold,Thot),method='cubic')
+        qh = griddata(points,qhs,(Tcold,Thot),method='linear')
+        qc = griddata(points,qcs,(Tcold,Thot),method='linear')
         return float(qh), float(qc)
     
     def HX_lister (whichHX,inputlist,Temp):
