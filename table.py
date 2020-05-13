@@ -7,7 +7,7 @@
 # 3 - won't onset
 # 0 - it works
 
-def table_read(ta,tc,th):
+def table_read(ta,tc,th,printmsg = True):
     import pandas as pd
     import numpy as np
     from scipy.interpolate import interp1d, griddata
@@ -17,9 +17,9 @@ def table_read(ta,tc,th):
     
     c_to_k = 273.15
     
-    ta +=c_to_k
-    tc +=c_to_k
-    th +=c_to_k
+    ta = round(ta+c_to_k,3)
+    tc = round(tc+c_to_k,3)
+    th = round(th+c_to_k,3)
     
     def amb_interpolator(temps,q_l,q_s,Tamb):
         qs = np.array([q_l,q_s])
@@ -56,13 +56,16 @@ def table_read(ta,tc,th):
     
     if fl_amb_outrange or fl_chx_lo or fl_chx_hi or fl_hhx_lo or fl_hhx_hi:
         if fl_amb_outrange or fl_chx_lo or fl_hhx_hi:
-            print('Input data outside available range, run DeltaEC!')
+            if printmsg:
+                print('Input data outside available range, run DeltaEC!')
             return 0.,0.,1
         if fl_chx_hi:
-            print('CHX near as ambient, open window idiot!')
+            if printmsg:
+                print('CHX near as ambient, open window idiot!')
             return 0.,0.,2
         else:
-            print('Cannot onset')
+            if printmsg:
+                print('Cannot onset')
             return 0.,0.,3
         
     else:
@@ -70,11 +73,12 @@ def table_read(ta,tc,th):
         rows_al, rows_ah, fl_a_lo, fl_a_hi, Ts_a = HX_lister ('AHX',lt,ta) # returns AHX low and AHX hi boundaries
         qh_al, qc_al = second_interpolator(rows_al,tc,th)
         qh_ah, qc_ah = second_interpolator(rows_ah,tc,th)
-        qh = amb_interpolator(Ts_a,qh_al,qh_ah,ta)
-        qc = amb_interpolator(Ts_a,qc_al,qc_ah,ta)
+        qh = round(amb_interpolator(Ts_a,qh_al,qh_ah,ta),4)
+        qc = round(amb_interpolator(Ts_a,qc_al,qc_ah,ta),4)
         
-        if qc<=10 or qh<=10: # threshold 10W for values to return
-            print('Cannot onset')
+        if qc<=5 or qh<=5: # threshold 10W for values to return
+            if printmsg:
+                print('Cannot onset')
             return 0.,0.,3
         else:
             return qc,qh,0
