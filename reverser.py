@@ -21,7 +21,7 @@ def Th_lookup(ta,tc,qc):
     
     qdata = pd.DataFrame(data=None, index=None, columns=None, dtype=None, copy=False)
     
-    th_list = np.arange(round(300-CtoK,3),round(601-CtoK,3),1)
+    th_list = np.arange(round(300-CtoK,3),round(601-CtoK,3),10)
     
     # for j in range(0,length(th_list)):
         
@@ -29,7 +29,7 @@ def Th_lookup(ta,tc,qc):
         qcool,qh,code = table_read(amb,cool,hot,False)
         return [hot,qcool]
     
-    num_cores = multiprocessing.cpu_count()
+    num_cores = multiprocessing.cpu_count()*2
          
     results = Parallel(n_jobs=num_cores)(delayed(rowsearch)(ta,tc,th) for th in th_list)
     # parallelized this line for higher efficiency
